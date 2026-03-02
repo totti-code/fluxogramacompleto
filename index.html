@@ -3,51 +3,51 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fluxograma — Troca / Avaria</title>
+  <title>Fluxograma — Troca / Avaria (Fornecedor)</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <header class="top">
-    <div class="topInner">
-      <div class="brand">
-        <div class="logo">MT</div>
-        <div>
-          <h1>Fluxograma — Troca / Avaria (Fornecedor)</h1>
-          <p class="muted">Arraste para mover • Scroll para zoom • Botões para ajustar</p>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn" id="btnZoomOut" title="Diminuir zoom">−</button>
-        <button class="btn" id="btnZoomIn" title="Aumentar zoom">+</button>
-        <button class="btn" id="btnFit" title="Ajustar à tela">Ajustar à tela</button>
-        <button class="btn" id="btnFull" title="Tela cheia">Tela cheia</button>
-        <label class="toggle" title="Modo compacto (fonte/padding menores)">
-          <input type="checkbox" id="toggleCompact" />
-          <span>Compacto</span>
-        </label>
+<header class="top">
+  <div class="topInner">
+    <div class="brand">
+      <div class="logo">MT</div>
+      <div>
+        <h1>Fluxograma — Troca / Avaria (Fornecedor)</h1>
+        <p class="muted">Arraste para mover • Scroll para zoom • “Ajustar à tela” para enquadrar</p>
       </div>
     </div>
-  </header>
 
-  <main class="wrap">
-    <section class="stage" id="stage">
-      <!-- viewport (com pan/zoom) -->
-      <div class="viewport" id="viewport">
-        <div class="world" id="world">
-          <svg class="edges" id="edges" xmlns="http://www.w3.org/2000/svg"></svg>
-          <div class="nodes" id="nodes"></div>
-        </div>
+    <div class="actions">
+      <button class="btn" id="btnZoomOut" title="Diminuir zoom">−</button>
+      <button class="btn" id="btnZoomIn" title="Aumentar zoom">+</button>
+      <button class="btn" id="btnFit" title="Ajustar à tela">Ajustar à tela</button>
+      <button class="btn" id="btnFull" title="Tela cheia">Tela cheia</button>
+
+      <label class="toggle" title="Modo compacto (fonte/padding menores)">
+        <input type="checkbox" id="toggleCompact" checked />
+        <span>Compacto</span>
+      </label>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="stage" id="stage">
+    <div class="viewport" id="viewport">
+      <div class="world" id="world">
+        <svg class="edges" id="edges" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="nodes" id="nodes"></div>
       </div>
+    </div>
 
-      <footer class="foot">
-        <span class="hint">Dica: clique em “Ajustar à tela” se ficar fora do enquadramento.</span>
-        <span class="muted" id="status"></span>
-      </footer>
-    </section>
-  </main>
+    <footer class="foot">
+      <span class="hint">Dica: use o botão “Ajustar à tela” se algo ficar fora do enquadramento.</span>
+      <span class="muted" id="status"></span>
+    </footer>
+  </section>
+</main>
 
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
