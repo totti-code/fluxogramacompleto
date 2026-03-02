@@ -1,6 +1,8 @@
 // ===============================
-// Fluxograma (render via JSON)
-// Pan + Zoom + Fit + Fullscreen
+// Fluxograma (JSON) - Versão limpa
+// - Sem sobreposição
+// - Colunas reais
+// - Opção A: 3 caminhos convergem para 2 passos únicos
 // ===============================
 
 const $ = (id) => document.getElementById(id);
@@ -17,106 +19,105 @@ const btnFit = $("btnFit");
 const btnFull = $("btnFull");
 const toggleCompact = $("toggleCompact");
 
-// --- Layout base (coordenadas) ---
-// Agora com colunas REAIS para evitar sobreposição
+// Compacto ON por padrão
+document.body.classList.add("compact");
+toggleCompact.checked = true;
+
+// --- Colunas (bem espaçadas) ---
 const COL_X = {
-  left:   140,   // BOLETO
-  left2:  520,   // BONIFICAÇÃO (e tronco da OPÇÃO A)
-  left3:  900,   // DESCONTO
-  center: 1280,  // OPÇÃO B
-  right:  1660   // OPÇÃO C
+  a1:  140,   // OPÇÃO A - BOLETO
+  a2:  520,   // OPÇÃO A - tronco / bonificação
+  a3:  900,   // OPÇÃO A - DESCONTO
+  main: 1280, // Coluna principal (antes da decisão) + OPÇÃO B
+  c:   1660   // OPÇÃO C
 };
 
-const Y0 = 60;
-const STEP = 120;
+// Layout vertical
+const Y0 = 70;
+const STEP = 125;
 
-// =====================
+// -------------------------------
 // NÓS
-// =====================
+// -------------------------------
 const nodes = [
-  { id:"start", type:"terminator", col:"center", y:0, text:"INÍCIO" },
+  // Coluna principal
+  { id:"start", type:"terminator", col:"main", y:0, text:"INÍCIO" },
+  { id:"p1", type:"process", col:"main", y:1, text:"Vendedor chega para alinhar a troca" },
+  { id:"p2", type:"process", col:"main", y:2, text:"Emitir relatório com avaria do fornecedor" },
+  { id:"p3", type:"process", col:"main", y:3, text:"Conferir itens na área de avarias junto com vendedor" },
+  { id:"p4", type:"process", col:"main", y:4, text:"Separar itens no saco e lacrar" },
+  { id:"dec_tipo", type:"decision", col:"main", y:5, text:"Tipo de troca?" },
 
-  { id:"c1", type:"process", col:"center", y:1, text:"Vendedor chega para alinhar a troca" },
-  { id:"c2", type:"process", col:"center", y:2, text:"Emitir relatório com avaria do fornecedor" },
-  { id:"c3", type:"process", col:"center", y:3, text:"Conferir itens na área de avarias junto com vendedor" },
-  { id:"c4", type:"process", col:"center", y:4, text:"Separar itens no saco e lacrar" },
+  // ---------------- OPÇÃO A ----------------
+  { id:"a_tag", type:"note", col:"a2", y:6.0, smallTop:"OPÇÃO A", title:"NF de Devolução", text:"" },
+  { id:"a_info", type:"note", col:"a2", y:7.1, text:"Informar CPD quais itens deve emitir nota e qual será a forma de pagamento (boleto, depósito em conta, bonificação ou desconto) e anexar a NF e boleto no saco lacrado" },
+  { id:"a_when", type:"process", col:"a2", y:8.2, text:"Quando o caminhão chegar para recolher a troca" },
+  { id:"dec_pag", type:"decision", col:"a2", y:9.2, text:"Forma de Pagamento da devolução?" },
 
-  { id:"dec_tipo", type:"decision", col:"center", y:5, text:"Tipo de troca?" },
+  // 3 caminhos de pagamento (somente o 1º passo específico de cada)
+  { id:"a_boleto", type:"process", col:"a1", y:10.4, smallTop:"BOLETO", text:"Destacar o canhoto da NF e do BOLETO e coletar assinatura do motorista" },
 
-  // --- OPÇÃO A (tronco no meio das 3 subcolunas) ---
-  { id:"a_tag", type:"note", col:"left2", y:5.25, smallTop:"OPÇÃO A", title:"NF de Devolução", text:"" },
-  { id:"a1", type:"note", col:"left2", y:6.15, text:"Informar CPD quais itens deve emitir nota e qual será a forma de pagamento (boleto, depósito em conta, bonificação ou desconto) e anexar a NF e boleto no saco lacrado" },
-  { id:"a2", type:"process", col:"left2", y:7.25, text:"Quando o caminhão chegar para recolher a troca" },
-  { id:"dec_pag", type:"decision", col:"left2", y:8.25, text:"Forma de Pagamento da devolução?" },
+  { id:"a_boni", type:"process", col:"a2", y:10.4, smallTop:"BONIFICAÇÃO", text:"Escrever no canhoto da NF a informação que será pago em bonificação. Ou caso já tenha sido pago, escrever qual foi a NF e informar ao CPD" },
 
-  // BOLETO (coluna left)
-  { id:"a_boleto_1", type:"process", col:"left", y:9.35, smallTop:"BOLETO", text:"Destacar o canhoto da NF e do BOLETO e coletar assinatura do motorista" },
-  { id:"a_boleto_2", type:"process", col:"left", y:10.35, text:"Bater a foto do(s) canhoto(s) pelo coletor" },
-  { id:"a_boleto_3", type:"process", col:"left", y:11.35, text:"Enviar o(s) canhoto(s) para o financeiro" },
+  { id:"a_desc", type:"process", col:"a3", y:10.4, smallTop:"DESCONTO NA NF OU BOLETO", text:"Escrever no canhoto da NF a informação que será pago em desconto ou se já foi efetuado desconto na NF ou boleto, escrever no canhoto qual foi a NF que teve o desconto e informar ao CPD" },
 
-  // BONIFICAÇÃO (coluna left2)
-  { id:"a_boni_1", type:"process", col:"left2", y:9.35, smallTop:"BONIFICAÇÃO", text:"Escrever no canhoto da NF a informação que será pago em bonificação. Ou caso já tenha sido pago escrever qual foi a NF e informar ao CPD" },
-  { id:"a_boni_2", type:"process", col:"left2", y:10.35, text:"Bater a foto do(s) canhoto(s) pelo coletor" },
-  { id:"a_boni_3", type:"process", col:"left2", y:11.35, text:"Enviar o(s) canhoto(s) para o financeiro" },
+  // ✅ PASSOS ÚNICOS (converge os 3)
+  { id:"a_foto", type:"process", col:"a2", y:11.8, text:"Bater a foto do(s) canhoto(s) pelo coletor" },
+  { id:"a_fin",  type:"process", col:"a2", y:12.9, text:"Enviar o(s) canhoto(s) para o financeiro" },
 
-  // DESCONTO (coluna left3)
-  { id:"a_desc_1", type:"process", col:"left3", y:9.35, smallTop:"DESCONTO NA NF OU BOLETO", text:"Escrever no canhoto da NF a informação que será pago em desconto ou se já foi efetuado desconto na NF ou boleto, escrever no canhoto qual foi a NF que teve o desconto e informar ao CPD" },
-  { id:"a_desc_2", type:"process", col:"left3", y:10.35, text:"Bater a foto do(s) canhoto(s) pelo coletor" },
-  { id:"a_desc_3", type:"process", col:"left3", y:11.35, text:"Enviar o(s) canhoto(s) para o financeiro" },
+  // ---------------- OPÇÃO B ----------------
+  { id:"b_tag", type:"note", col:"main", y:6.0, smallTop:"OPÇÃO B", title:"Troca produto por produto sem NF", text:"" },
+  { id:"b1", type:"process", col:"main", y:7.1, text:"Identificar o saco com os itens separado com a informação que está aguardando a troca" },
+  { id:"b2", type:"process", col:"main", y:8.2, text:"Quando o caminhão chegar para recolher a troca" },
+  { id:"b3", type:"process", col:"main", y:9.3, text:"Conferir se quantidade é a mesma e se são os mesmos itens" },
+  { id:"b4", type:"process", col:"main", y:10.4, text:"Receber os itens e devolver ou descartar os avariados" },
+  { id:"b5", type:"note", col:"main", y:11.6, text:"Realizar o lançamento dos itens RECEBIDOS com centro de custo PRODPROD SEM NOTA" },
 
-  // --- OPÇÃO B (centro) ---
-  { id:"b_tag", type:"note", col:"center", y:5.25, smallTop:"OPÇÃO B", title:"Troca produto por produto sem NF", text:"" },
-  { id:"b1", type:"process", col:"center", y:6.15, text:"Identificar o saco com os itens separado com a informação que está aguardando a troca" },
-  { id:"b2", type:"process", col:"center", y:7.25, text:"Quando o caminhão chegar para recolher a troca" },
-  { id:"b3", type:"process", col:"center", y:8.35, text:"Conferir se quantidade é a mesma e se são os mesmos itens" },
-  { id:"b4", type:"process", col:"center", y:9.45, text:"Receber os itens e devolver ou descartar os avariados" },
-  { id:"b5", type:"note", col:"center", y:10.55, text:"Realizar o lançamento dos itens RECEBIDOS com centro de custo PRODPROD SEM NOTA" },
+  // ---------------- OPÇÃO C ----------------
+  { id:"c_tag", type:"note", col:"c", y:6.0, smallTop:"OPÇÃO C", title:"Troca produto por produto com NF", text:"" },
+  { id:"c1", type:"process", col:"c", y:7.1, text:"Identificar o saco com os itens separado com a informação que está aguardando a troca" },
+  { id:"c2", type:"process", col:"c", y:8.2, text:"Quando o caminhão chegar para recolher a troca" },
+  { id:"c3", type:"process", col:"c", y:9.3, text:"Conferir se o valor da bonificação bate com o valor das avarias" },
+  { id:"c4", type:"process", col:"c", y:10.4, text:"Descartar os itens avariados" },
+  { id:"c5", type:"note", col:"c", y:11.6, text:"Fazer o lançamento dos itens AVARIADOS com centro de custo PRODPROD COM NOTA" },
 
-  // --- OPÇÃO C (direita) ---
-  { id:"c_tag", type:"note", col:"right", y:5.25, smallTop:"OPÇÃO C", title:"Troca produto por produto com NF", text:"" },
-  { id:"cC1", type:"process", col:"right", y:6.15, text:"Identificar o saco com os itens separado com a informação que está aguardando a troca" },
-  { id:"cC2", type:"process", col:"right", y:7.25, text:"Quando o caminhão chegar para recolher a troca" },
-  { id:"cC3", type:"process", col:"right", y:8.35, text:"Conferir se o valor da bonificação bate com o valor das avarias" },
-  { id:"cC4", type:"process", col:"right", y:9.45, text:"Descartar os itens avariados" },
-  { id:"cC5", type:"note", col:"right", y:10.55, text:"Fazer o lançamento dos itens AVARIADOS com centro de custo PRODPROD COM NOTA" },
-
-  // Fim
-  { id:"end", type:"terminator", col:"center", y:12.15, text:"FIM" }
+  // FIM (central)
+  { id:"end", type:"terminator", col:"main", y:14.1, text:"FIM" }
 ];
 
-// =====================
+// -------------------------------
 // ARESTAS
-// =====================
+// -------------------------------
 const edges = [
-  ["start","c1"],
-  ["c1","c2"],
-  ["c2","c3"],
-  ["c3","c4"],
-  ["c4","dec_tipo"],
+  // fluxo principal
+  ["start","p1"],
+  ["p1","p2"],
+  ["p2","p3"],
+  ["p3","p4"],
+  ["p4","dec_tipo"],
 
-  // Split Tipo de troca
+  // split tipo troca
   ["dec_tipo","a_tag", "label", "OPÇÃO A", "warn"],
   ["dec_tipo","b_tag", "label", "OPÇÃO B", "accent"],
   ["dec_tipo","c_tag", "label", "OPÇÃO C", "warn"],
 
-  // Opção A
-  ["a_tag","a1"],
-  ["a1","a2"],
-  ["a2","dec_pag"],
+  // Opção A tronco
+  ["a_tag","a_info"],
+  ["a_info","a_when"],
+  ["a_when","dec_pag"],
 
-  // Pagamento -> 3 caminhos
-  ["dec_pag","a_boleto_1","label","BOLETO","accent"],
-  ["dec_pag","a_boni_1","label","BONIFICAÇÃO","warn"],
-  ["dec_pag","a_desc_1","label","DESCONTO","warn"],
+  // decisão pagamento -> 3 caminhos (um passo específico)
+  ["dec_pag","a_boleto", "label", "BOLETO", "accent"],
+  ["dec_pag","a_boni",   "label", "BONIFICAÇÃO", "warn"],
+  ["dec_pag","a_desc",   "label", "DESCONTO", "warn"],
 
-  ["a_boleto_1","a_boleto_2"],
-  ["a_boleto_2","a_boleto_3"],
+  // ✅ convergência em “Bater foto”
+  ["a_boleto","a_foto"],
+  ["a_boni","a_foto"],
+  ["a_desc","a_foto"],
 
-  ["a_boni_1","a_boni_2"],
-  ["a_boni_2","a_boni_3"],
-
-  ["a_desc_1","a_desc_2"],
-  ["a_desc_2","a_desc_3"],
+  // ✅ depois “Enviar ao financeiro”
+  ["a_foto","a_fin"],
 
   // Opção B
   ["b_tag","b1"],
@@ -126,21 +127,21 @@ const edges = [
   ["b4","b5"],
 
   // Opção C
-  ["c_tag","cC1"],
-  ["cC1","cC2"],
-  ["cC2","cC3"],
-  ["cC3","cC4"],
-  ["cC4","cC5"],
+  ["c_tag","c1"],
+  ["c1","c2"],
+  ["c2","c3"],
+  ["c3","c4"],
+  ["c4","c5"],
 
-  // Convergência para FIM
-  ["a_boleto_3","end"],
-  ["a_boni_3","end"],
-  ["a_desc_3","end"],
+  // convergir tudo pro fim
+  ["a_fin","end"],
   ["b5","end"],
-  ["cC5","end"]
+  ["c5","end"]
 ];
 
-// --- Pan/Zoom state ---
+// -------------------------------
+// Engine Pan/Zoom + Render
+// -------------------------------
 let scale = 1;
 let tx = 0;
 let ty = 0;
@@ -151,7 +152,7 @@ let dragStart = { x:0, y:0, tx:0, ty:0 };
 const layout = new Map();
 
 function nodeXY(n){
-  const x = COL_X[n.col] ?? COL_X.center;
+  const x = COL_X[n.col] ?? COL_X.main;
   const y = Y0 + n.y * STEP;
   return { x, y };
 }
@@ -167,7 +168,6 @@ function createNodeEl(n){
     st.textContent = n.smallTop;
     el.appendChild(st);
   }
-
   if(n.title){
     const t = document.createElement("div");
     t.className = "title";
@@ -185,7 +185,6 @@ function createNodeEl(n){
     p.textContent = n.text;
     el.appendChild(p);
   }
-
   return el;
 }
 
@@ -224,7 +223,7 @@ function render(){
       maxY = Math.max(maxY, item.y + h);
     }
 
-    const pad = 120;
+    const pad = 140;
     const W = (maxX - minX) + pad*2;
     const H = (maxY - minY) + pad*2;
 
@@ -260,7 +259,8 @@ function centerOf(id){
 function drawEdges(){
   edgesSvg.innerHTML = "";
 
-  function elbowPath(a, b){
+  // Elbow (estável, limpo)
+  function elbow(a, b){
     const dy = b.y - a.y;
     const midY = a.y + dy * 0.55;
     return `M ${a.x} ${a.y}
@@ -276,17 +276,15 @@ function drawEdges(){
     if(!a || !b) continue;
 
     const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-    path.setAttribute("d", elbowPath(a,b));
+    path.setAttribute("d", elbow(a,b));
     path.setAttribute("class", `edge ${style === "accent" ? "accent" : ""} ${style === "warn" ? "warn" : ""}`);
     edgesSvg.appendChild(path);
 
     if(kind === "label" && label){
       const t = document.createElementNS("http://www.w3.org/2000/svg","text");
       t.setAttribute("class","label");
-      const lx = (a.x + b.x) / 2;
-      const ly = (a.y + b.y) / 2 - 10;
-      t.setAttribute("x", lx);
-      t.setAttribute("y", ly);
+      t.setAttribute("x", (a.x + b.x) / 2);
+      t.setAttribute("y", (a.y + b.y) / 2 - 10);
       t.textContent = label;
       edgesSvg.appendChild(t);
     }
@@ -298,11 +296,9 @@ function applyTransform(){
   statusEl.textContent = `Zoom: ${(scale*100).toFixed(0)}%`;
 }
 
-function clampScale(s){
-  return Math.max(0.25, Math.min(2.8, s));
-}
+function clampScale(s){ return Math.max(0.25, Math.min(2.8, s)); }
 
-function zoomAt(deltaScale, clientX, clientY){
+function zoomAt(factor, clientX, clientY){
   const rect = viewport.getBoundingClientRect();
   const vx = clientX - rect.left;
   const vy = clientY - rect.top;
@@ -310,7 +306,7 @@ function zoomAt(deltaScale, clientX, clientY){
   const wx = (vx - tx) / scale;
   const wy = (vy - ty) / scale;
 
-  const newScale = clampScale(scale * deltaScale);
+  const newScale = clampScale(scale * factor);
 
   tx = vx - wx * newScale;
   ty = vy - wy * newScale;
@@ -326,7 +322,7 @@ function fitToScreen(silent=false){
   const vw = v.width;
   const vh = v.height;
 
-  const margin = 40;
+  const margin = 50;
   const s = Math.min((vw - margin) / W, (vh - margin) / H);
 
   scale = clampScale(s);
@@ -339,19 +335,16 @@ function fitToScreen(silent=false){
 
 function toggleFullscreen(){
   const el = $("stage");
-  if(!document.fullscreenElement){
-    el.requestFullscreen?.();
-  } else {
-    document.exitFullscreen?.();
-  }
+  if(!document.fullscreenElement) el.requestFullscreen?.();
+  else document.exitFullscreen?.();
 }
 
-// Pan (mouse)
+// Pan
 viewport.addEventListener("mousedown", (ev) => {
   isDragging = true;
   dragStart = { x: ev.clientX, y: ev.clientY, tx, ty };
 });
-window.addEventListener("mouseup", () => { isDragging = false; });
+window.addEventListener("mouseup", () => isDragging = false);
 window.addEventListener("mousemove", (ev) => {
   if(!isDragging) return;
   tx = dragStart.tx + (ev.clientX - dragStart.x);
@@ -359,13 +352,13 @@ window.addEventListener("mousemove", (ev) => {
   applyTransform();
 });
 
-// Pan (touch)
+// Touch pan
 viewport.addEventListener("touchstart", (ev) => {
   if(ev.touches.length !== 1) return;
   const t = ev.touches[0];
   isDragging = true;
   dragStart = { x: t.clientX, y: t.clientY, tx, ty };
-}, { passive: true });
+}, { passive:true });
 
 viewport.addEventListener("touchmove", (ev) => {
   if(!isDragging || ev.touches.length !== 1) return;
@@ -373,16 +366,16 @@ viewport.addEventListener("touchmove", (ev) => {
   tx = dragStart.tx + (t.clientX - dragStart.x);
   ty = dragStart.ty + (t.clientY - dragStart.y);
   applyTransform();
-}, { passive: true });
+}, { passive:true });
 
-viewport.addEventListener("touchend", () => { isDragging = false; });
+viewport.addEventListener("touchend", () => isDragging = false);
 
-// Zoom wheel
+// Wheel zoom
 viewport.addEventListener("wheel", (ev) => {
   ev.preventDefault();
-  const zoomFactor = ev.deltaY > 0 ? 0.92 : 1.08;
-  zoomAt(zoomFactor, ev.clientX, ev.clientY);
-}, { passive: false });
+  const factor = ev.deltaY > 0 ? 0.92 : 1.08;
+  zoomAt(factor, ev.clientX, ev.clientY);
+}, { passive:false });
 
 // Buttons
 btnZoomIn.addEventListener("click", () => {
@@ -396,14 +389,17 @@ btnZoomOut.addEventListener("click", () => {
 btnFit.addEventListener("click", () => fitToScreen());
 btnFull.addEventListener("click", () => toggleFullscreen());
 
+// Compact
 toggleCompact.addEventListener("change", () => {
   document.body.classList.toggle("compact", toggleCompact.checked);
   render();
 });
 
+// Auto fit
 window.addEventListener("resize", () => fitToScreen(true));
 document.addEventListener("fullscreenchange", () => fitToScreen(true));
 
 // Start
 render();
 applyTransform();
+fitToScreen(true);
