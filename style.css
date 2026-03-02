@@ -9,11 +9,11 @@
   --shadow: 0 14px 35px rgba(0,0,0,.35);
   --radius: 16px;
 
-  --nodeW: 300px;
+  --nodeW: 320px;
   --nodePad: 14px;
   --nodeFont: 13px;
 
-  --nodeW_compact: 270px;
+  --nodeW_compact: 290px;
   --nodePad_compact: 11px;
   --nodeFont_compact: 12px;
 }
@@ -31,6 +31,12 @@ body{
   color: var(--text);
 }
 
+body.compact{
+  --nodeW: var(--nodeW_compact);
+  --nodePad: var(--nodePad_compact);
+  --nodeFont: var(--nodeFont_compact);
+}
+
 .top{
   position: sticky;
   top: 0;
@@ -41,7 +47,7 @@ body{
 }
 
 .topInner{
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 12px 14px;
   display:flex;
@@ -54,7 +60,7 @@ body{
   display:flex;
   align-items:center;
   gap: 12px;
-  min-width: 280px;
+  min-width: 320px;
 }
 
 .logo{
@@ -113,7 +119,7 @@ h1{
 .toggle input{ transform: translateY(1px); }
 
 .wrap{
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 14px;
 }
@@ -128,7 +134,7 @@ h1{
 
 .viewport{
   height: calc(100vh - 140px);
-  min-height: 520px;
+  min-height: 540px;
   position: relative;
   overflow: hidden;
   cursor: grab;
@@ -180,33 +186,29 @@ h1{
   text-transform: uppercase;
 }
 
-.node.process{ border-left: 4px solid rgba(76,201,240,.65); }
-.node.note{ border-left: 4px solid rgba(255,183,3,.70); }
-.node.badge{ border-left: 4px solid rgba(180,255,180,.45); }
-
 .node .title{
   font-weight: 750;
   margin-bottom: 6px;
 }
 
+.node.process{ border-left: 4px solid rgba(76,201,240,.65); }
+.node.note{ border-left: 4px solid rgba(255,183,3,.70); }
+
 .node.terminator{
-  width: 150px;
+  width: 160px;
   text-align:center;
   border-radius: 999px;
   padding: 12px 14px;
   font-weight: 800;
   border: 1px solid rgba(76,201,240,.55);
-  background: rgba(17,26,46,.92);
 }
 
 .node.decision{
-  width: 220px;
+  width: 230px;
   text-align:center;
   border-radius: 18px;
   border: 1px solid rgba(255,183,3,.55);
-  background: rgba(17,26,46,.92);
 }
-
 .node.decision::before{
   content:"";
   position:absolute;
@@ -222,18 +224,13 @@ h1{
   fill: none;
 }
 
-.edge.accent{
-  stroke: rgba(76,201,240,.9);
-}
-
-.edge.warn{
-  stroke: rgba(255,183,3,.9);
-}
+.edge.accent{ stroke: rgba(76,201,240,.95); }
+.edge.warn{ stroke: rgba(255,183,3,.95); }
 
 .label{
   font-size: 12px;
   fill: rgba(167,183,214,.95);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: .2px;
 }
 
@@ -247,13 +244,4 @@ h1{
   background: rgba(11,18,32,.35);
 }
 
-.hint{
-  color: rgba(234,242,255,.9);
-  font-size: 12px;
-}
-
-body.compact{
-  --nodeW: var(--nodeW_compact);
-  --nodePad: var(--nodePad_compact);
-  --nodeFont: var(--nodeFont_compact);
-}
+.hint{ color: rgba(234,242,255,.9); font-size: 12px; }
